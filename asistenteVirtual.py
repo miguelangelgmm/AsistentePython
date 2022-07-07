@@ -1,9 +1,12 @@
+import datetime
 import pyttsx3
 import pywhatkit
 import speech_recognition as sr
 import keyboard
 import time
-# import datetime
+import os
+import wikipedia
+
 # inicializamos el reconocimiento de voz
 listener = sr.Recognizer()
 # inicializamos pyttsx3
@@ -13,10 +16,12 @@ maria.setProperty('rate', 130)
 # nombre de nuestro asistente
 nombre = "maría"
 
+
 def escuchar():
     """
-    Permite escuchar por micrófono
+    Permite escuchar por micrófono, retorna la frase escuchada si decimos el nomber de maria
     """
+    audioTxt = ""
     try:
         # empezamos a escuchar por el micrófono
         with sr.Microphone() as micro:
@@ -31,6 +36,8 @@ def escuchar():
             if nombre in audioTxt:
                 audioTxt = audioTxt.replace(nombre, "")
                 print(audioTxt)
+            else:
+                audioTxt = ""
     except:
         pass
     return audioTxt
@@ -44,141 +51,88 @@ def hablar(txt):
     maria.say(txt)
     maria.runAndWait()
 
+
+def reproducirYtbe(video):
+    """
+    @param video: reproduce el video dicho en youtube
+    """
+    cancion = video.replace("reproduce", "")
+    hablar(video.replace("reproduce", "reproduciendo"))
+    pywhatkit.playonyt(cancion)
+    time.sleep(5)
+    keyboard.send("space")
+
+
+def decirHora():
+    """
+    Dice la hora en la que nos encontramos
+    """
+    hora = datetime.datetime.now().strftime("%I:%M %p")
+    hablar("Son las: " + hora)
+
+
+def buscarWiki(palabra):
+    """
+    Dice los dos primeros párrafos de una palabra en la wikipedia
+    @param palabra: palabra buscada
+    """
+    palabra = palabra.replace("wikipedia", "")
+    wikipedia.set_lang("es")
+    informacion = wikipedia.summary(palabra, 2)
+    hablar(informacion)
+
+
+def decirDia():
+    """
+    Función que permite saber en que dia nos encontramos
+    @return: Día de la semana
+    """
+    #obtenemos el dia actual de forma numérica
+    dia = datetime.datetime.today().weekday() + 1
+    #Creamos un diccionario con los dias de la mana
+    semana = {1: 'Lunes', 2: 'Martes',
+              3: 'Miercoles', 4: 'Jueves',
+              5: 'Viernes', 6: 'Sábado',
+              7: 'Domingo'}
+
+    return semana[dia]
+
+
 def accion():
     """
     Función que va a ejecutar una orden dependiendo de la opción solicitada
     """
-    opcion=escuchar()
 
-    if "reproduce" in opcion:
-        cancion= opcion.replace("reproduce", "")
-        hablar(opcion.replace("reproduce", "reproduciendo"))
-        pywhatkit.playonyt(cancion)
-        time.sleep(5)
-        keyboard.send("space")
-
-accion()
-"""""
-import pyttsx3
-import speech_recognition as sr
-import webbrowser
-import datetime
-import wikipedia
-
-
-def takeCommand():
-    r = sr.Recognizer()
-
-    with sr.Microphone() as source:
-        print('Listening')
-
-        r.pause_threshold = 0.7
-        audio = r.listen(source)
-
+    salida = True
+    while salida:
         try:
-            print("Recognizing")
-
-            Query = r.recognize_google(audio, language='en-in')
-            print("the command is printed=", Query)
-
-        except Exception as e:
-            print(e)
-            print("Say that again sir")
-            return "None"
-
-        return Query
-
-
-def speak(audio):
-    engine = pyttsx3.init()
-
-    voices = engine.getProperty('voices')
-
-    engine.setProperty('voice', voices[0].id)
-
-    engine.say(audio)
-
-    engine.runAndWait()
-
-
-def tellDay():
-    day = datetime.datetime.today().weekday() + 1
-
-    Day_dict = {1: 'Monday', 2: 'Tuesday',
-                3: 'Wednesday', 4: 'Thursday',
-                5: 'Friday', 6: 'Saturday',
-                7: 'Sunday'}
-
-    if day in Day_dict.keys():
-        day_of_the_week = Day_dict[day]
-        print(day_of_the_week)
-        speak("The day is " + day_of_the_week)
-
-
-def tellTime():
-    time = str(datetime.datetime.now())
-
-    print(time)
-    hour = time[11:13]
-    min = time[14:16]
-    speak(self, "The time is sir" + hour + "Hours and" + min + "Minutes")
-
-
-def Hello():
-    speak("hello sir I am your desktop assistant. /
-    Tell
-    me
-    how
-    may
-    I
-    help
-    you
-    ")
-
-
-def Take_query():
-    Hello()
-
-    while (True):
-
-        query = takeCommand().lower()
-        if "open geeksforgeeks" in query:
-            speak("Opening GeeksforGeeks ")
-
-            webbrowser.open("www.geeksforgeeks.com")
+            opcion = escuchar()
+        except UnboundLocalError:
             continue
-
-        elif "open google" in query:
-            speak("Opening Google ")
-            webbrowser.open("www.google.com")
+        if "reproduce" in opcion:
+            reproducirYtbe(opcion)
+        elif "hora" in opcion:
+            decirHora()
+        elif "wikipedia" in opcion:
+            buscarWiki(opcion)
+        elif "finaliza" in opcion:
+            salida = False
+            hablar("Espero que pase un buen dia")
+        elif "apaga" in opcion:
+            os.system("shutdown /s /t 60")
+            hablar("El ordenador se apagara en un minuto")
+        elif "cancela" in opcion:
+            os.system("shutdown -a")
+            hablar("Se ha cancelado el apagado")
+        elif "día" in opcion:
+            hablar("El día de la semana es " + decirDia())
+        elif opcion == "":
+            # Si el usuario no dice el nombre de maria no hacemos nada
             continue
-
-        elif "which day it is" in query:
-            tellDay()
-            continue
-
-        elif "tell me the time" in query:
-            tellTime()
-            continue
-
-
-        elif "bye" in query:
-            speak("Bye. Check Out GFG for more exicting things")
-            exit()
-
-        elif "from wikipedia" in query:
-
-            speak("Checking the wikipedia ")
-            query = query.replace("wikipedia", "")
-
-            result = wikipedia.summary(query, sentences=4)
-            speak("According to wikipedia")
-            speak(result)
-
-        elif "tell me your name" in query:
-            speak("I am Jarvis. Your deskstop Assistant")
+        else:
+            hablar("No te he entendido bien")
 
 
 if __name__ == '__main__':
-    Take_query()
-"""""
+    hablar("Buenos dias yo soy maria tu asistenta personal")
+    accion()
